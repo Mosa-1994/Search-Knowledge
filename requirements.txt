@@ -1,4 +1,6 @@
 streamlit
+pandas
 sentence-transformers
 faiss-cpu
-openai
+scikit-learn
+groq
