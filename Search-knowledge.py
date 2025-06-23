@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 from sklearn.preprocessing import normalize
-import openai
+from groq import Groq # Importeer de Groq SDK
 
 # --- CONFIG ---
 st.set_page_config(page_title="RAG Kenniszoeker", layout="wide")
@@ -20,8 +20,10 @@ groq_api_key = st.sidebar.text_input("Groq API Key", type="password")
 uploaded_file = st.file_uploader("Upload je Knowledge CSV", type=["csv"])
 
 if uploaded_file and groq_api_key:
-    # Init Groq
-    openai.api_key = groq_api_key
+    # Init Groq Client
+    client = Groq(
+        api_key=groq_api_key,
+    )
 
     # Lees CSV
     df = pd.read_csv(uploaded_file)
@@ -65,17 +67,23 @@ if uploaded_file and groq_api_key:
             prompt = f"Beantwoord de vraag op basis van deze artikelen:\n\n{context}\n\nVraag: {vraag}\nAntwoord:"
 
             # Groq LLM call
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-
-            antwoord = response['choices'][0]['message']['content']
+            try:
+                chat_completion = client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        }
+                    ],
+                    model="llama3-8b-8192", # Of een ander model dat Groq aanbiedt, bijv. "mixtral-8x7b-32768"
+                )
+                antwoord = chat_completion.choices[0].message.content
+            except Exception as e:
+                st.error(f"Fout bij het aanroepen van de Groq API: {e}")
+                antwoord = "Er is een fout opgetreden bij het genereren van het antwoord."
 
             st.subheader("🔗 Relevante artikelen")
-            st.dataframe(matches[['Title', 'UrlName']].reset_index(drop=True))
+            st.dataframe(matches[['title', 'UrlName']].reset_index(drop=True)) # Let op: 'Title' moet waarschijnlijk 'title' zijn
             st.subheader("💡 Antwoord")
             st.write(antwoord)
 else:
