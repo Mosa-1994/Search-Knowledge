@@ -30,7 +30,7 @@ if uploaded_file and groq_api_key:
 
     # Voeg embedding input samen
     df['embedding_input'] = df.apply(
-        lambda row: f"{row['title']} {row['summary']} {row['UrlName']}",
+        lambda row: f"{row['Title']} {row['Summary']} {row['UrlName']}",
         axis=1
     )
     texts = df['embedding_input'].tolist()
@@ -83,7 +83,7 @@ if uploaded_file and groq_api_key:
                 antwoord = "Er is een fout opgetreden bij het genereren van het antwoord."
 
             st.subheader("🔗 Relevante artikelen")
-            st.dataframe(matches[['title', 'UrlName']].reset_index(drop=True)) # Let op: 'Title' moet waarschijnlijk 'title' zijn
+            st.dataframe(matches[['Title', 'Summary', 'UrlName']].reset_index(drop=True))
             st.subheader("💡 Antwoord")
             st.write(antwoord)
 else:
