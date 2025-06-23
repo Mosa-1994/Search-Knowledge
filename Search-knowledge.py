@@ -26,7 +26,7 @@ if uploaded_file and groq_api_key:
     )
 
     # Lees CSV
-    df = pd.read_csv(uploaded_file)
+    df = pd.read_csv(uploaded_file, sep=';')
 
     # Voeg embedding input samen
     df['embedding_input'] = df.apply(
