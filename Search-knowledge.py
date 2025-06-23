@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 from sklearn.preprocessing import normalize
-from openai import OpenAI
+import openai
 
 # --- CONFIG ---
 st.set_page_config(page_title="RAG Kenniszoeker", layout="wide")
@@ -21,10 +21,7 @@ uploaded_file = st.file_uploader("Upload je Knowledge CSV", type=["csv"])
 
 if uploaded_file and groq_api_key:
     # Init Groq
-    client = OpenAI(
-        api_key=groq_api_key,
-        base_url="https://api.groq.com/openai/v1"
-    )
+    openai.api_key = groq_api_key
 
     # Lees CSV
     df = pd.read_csv(uploaded_file)
@@ -68,17 +65,18 @@ if uploaded_file and groq_api_key:
             prompt = f"Beantwoord de vraag op basis van deze artikelen:\n\n{context}\n\nVraag: {vraag}\nAntwoord:"
 
             # Groq LLM call
-            response = client.chat.completions.create(
-                model="llama3-70b-8192",
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
             )
 
-            st.subheader("✅ AI Antwoord")
-            st.write(response.choices[0].message.content)
+            antwoord = response['choices'][0]['message']['content']
 
             st.subheader("🔗 Relevante artikelen")
-            st.dataframe(matches[['title', 'UrlName']].reset_index(drop=True))
+            st.dataframe(matches[['Title', 'UrlName']].reset_index(drop=True))
+            st.subheader("💡 Antwoord")
+            st.write(antwoord)
 else:
     st.info("➡️ Upload een CSV en vul je Groq API key in om te starten.")
